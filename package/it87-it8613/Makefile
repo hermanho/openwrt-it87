@@ -2,8 +2,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=it87-it8613
-PKG_VERSION:=1
-PKG_RELEASE:=2
+# scripts/build.sh exports the version derived from SOURCE_COMMIT/GITHUB_SHA.
+ifndef IT87_SOURCE_VERSION
+  $(error Build with scripts/build.sh to set the exact source version)
+endif
+PKG_VERSION:=$(IT87_SOURCE_VERSION)
+PKG_RELEASE:=1
 PKG_LICENSE:=GPL-2.0-or-later
 PKG_LICENSE_FILES:=COPYING
 PKG_BUILD_PARALLEL:=1
@@ -14,6 +18,7 @@ include $(INCLUDE_DIR)/package.mk
 define KernelPackage/hwmon-it87-it8613
   SUBMENU:=Hardware Monitoring Support
   TITLE:=IT8613E fan speed monitoring (read-only)
+  VERSION:=$(PKG_VERSION)
   URL:=https://github.com/hermanho/openwrt-it87
   DEPENDS:=@TARGET_x86_64 +kmod-hwmon-core +kmod-hwmon-vid +kmod-i2c-core +kmod-thermal
   CONFLICTS:=kmod-hwmon-it87

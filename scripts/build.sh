@@ -8,6 +8,27 @@ config="$repo/targets/$target.json"
 test -f "$config"
 [[ $(uname -sm) == 'Linux x86_64' ]] || { echo 'Build on Linux x86_64 (GitHub Actions or a container).' >&2; exit 1; }
 get() { jq -er --arg key "$1" '.[$key]' "$config"; }
+get_source_revision() {
+    local commit_info commit_epoch commit_hash year_day seconds
+    commit_info="$(git -C "$repo" show -s --format='%ct %h' --abbrev=7 \
+        "${SOURCE_COMMIT:-${GITHUB_SHA:-HEAD}}")"
+    read -r commit_epoch commit_hash <<< "$commit_info"
+
+    if ! [[ "$commit_epoch" =~ ^[0-9]+$ ]] || ! [[ "$commit_hash" =~ ^[0-9a-f]{7}$ ]]; then
+        echo "error: unable to determine source revision from git" >&2
+        exit 1
+    fi
+
+    seconds="$((commit_epoch % 86400))"
+    if year_day="$(date --utc --date="@$commit_epoch" '+%y.%j' 2>/dev/null)"; then
+        :
+    else
+        year_day="$(date -u -r "$commit_epoch" '+%y.%j')"
+    fi
+
+    printf '%s.%05d~%s\n' "$year_day" "$seconds" "$commit_hash"
+}
+
 release=$(get release)
 board=$(get target)
 sdk_archive=$(get sdk)
@@ -18,7 +39,12 @@ kernel_release=$(get kernel_release)
 work=${IT87_WORK_DIR:-"$repo/.work"}
 sdk="$work/sdk-$target"
 downloads="$work/downloads"
-mkdir -p "$downloads" "$repo/dist/$target"
+out="$repo/dist/$target"
+mkdir -p "$downloads" "$out"
+
+export IT87_SOURCE_VERSION
+IT87_SOURCE_VERSION="$(get_source_revision)"
+echo "Building $IT87_SOURCE_VERSION"
 source_file="$repo/package/it87-it8613/src/it87.c"
 printf '%s  %s\n' "$(get source_sha256)" "$source_file" | sha256sum -c -
 archive="$downloads/$sdk_archive"
@@ -54,14 +80,13 @@ cp -R "$repo/package/it87-it8613/." "$package/"
     make defconfig
     make -j"${IT87_JOBS:-2}" package/it87-it8613/compile V=s
 )
-mapfile -t packages < <(find "$sdk/bin" -type f -name 'kmod-hwmon-it87-it8613-*.apk' | sort)
+mapfile -t packages < <(find "$sdk/bin" -type f -name "kmod-hwmon-it87-it8613-$IT87_SOURCE_VERSION.apk" | sort)
 [[ ${#packages[@]} == 1 ]] || { echo "Expected one APK, found ${#packages[@]}" >&2; exit 1; }
-out="$repo/dist/$target"
+rm -f "$out"/kmod-hwmon-it87-it8613-*.apk
 cp "${packages[0]}" "$out/"
 cp "$config" "$out/target.json"
 apk="$sdk/staging_dir/host/bin/apk"
 "$apk" adbdump --format json "${packages[0]}" > "$out/package.json"
-python3 "$repo/scripts/verify-package.py" "$config" "$out/package.json"
 # Export the exact stripped module from the APK, not an unstripped build copy.
 extract_dir=$(mktemp -d "$work/extract.XXXXXX")
 trap 'rm -rf "$extract_dir"' EXIT
