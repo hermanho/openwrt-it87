@@ -97,6 +97,8 @@ jobs:
             exit 1
           }
           test -s keys/openwrt-it87.pem
+          printf '%s' "$APK_SIGNING_KEY_PEM" | openssl ec -pubout -out "$RUNNER_TEMP/shared-signing.pub.pem"
+          cmp "$RUNNER_TEMP/shared-signing.pub.pem" keys/openwrt-it87.pem
       - uses: actions/download-artifact@v8
         with:
           name: it87-${{ env.TARGET }}-${{ github.sha }}

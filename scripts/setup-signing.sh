@@ -16,4 +16,8 @@ cmp "$keydir/public.pem" "$repo/keys/openwrt-it87.pem" || {
 }
 gh api --method PUT "repos/$repository/environments/feed-production" >/dev/null
 gh secret set APK_SIGNING_KEY_PEM --repo "$repository" --env feed-production < "$private_key"
+# Remove the obsolete independent repository-level key only after the shared key is set.
+if gh secret list --repo "$repository" --json name --jq '.[].name' | grep -qx APK_SIGNING_KEY_PEM; then
+    gh secret delete APK_SIGNING_KEY_PEM --repo "$repository"
+fi
 echo 'Existing HomeProxy signing key configured in feed-production.'

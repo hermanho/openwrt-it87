@@ -48,8 +48,8 @@ bash scripts/setup-signing.sh /path/to/homeproxy-private.pem hermanho/openwrt-it
 ```
 
 The script verifies the private key against the committed public key before setting
-`APK_SIGNING_KEY_PEM` in the `feed-production` Environment. It never creates a new
-key. Publishing fails if the secret is missing or the public key does not match.
+`APK_SIGNING_KEY_PEM` in the `feed-production` Environment, then removes the
+obsolete repository-level signing secret. It never creates a new key. Publishing fails if the secret is missing or the public key does not match.
 Enable GitHub Pages with **GitHub Actions** as the source. The feed URL is:
 
 ```text
