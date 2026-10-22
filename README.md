@@ -15,7 +15,23 @@ Package: `kmod-hwmon-it87-it8613`. It conflicts with stock `kmod-hwmon-it87`,
 because both install `it87.ko`. A versioned `kmod-hwmon-it87` provide makes the
 packages mutually exclusive under APK; `CONFLICTS` also records the build-time
 conflict. GPIO and watchdog packages are separate and can remain.
-The package version starts at `6.12.74.1-r2`; `1` is the backport version.
+Package versions use the requested format:
+
+```text
+6.12.JJJ.SSSSS~SHA
+```
+
+`6.12` is the kernel major/minor series from the pinned target kernel, `JJJ` is
+the commit's UTC day of year (three digits), `SSSSS` is its UTC seconds since
+midnight (five digits), and `SHA` is the first seven characters of the exact
+triggering commit. Example: `6.12.295.64800~abc1234`.
+The kernel patch number and package revision are not included in this version.
+The complete kernel ABI dependency remains pinned separately to 6.12.74 and its ABI.
+
+CI explicitly passes `github.sha` as `SOURCE_COMMIT`, even for documentation-only
+commits. Local builds use `SOURCE_COMMIT`, then `GITHUB_SHA`, then `HEAD`.
+Rebuilding the same commit gives the same version; dirty working-tree changes do
+not change the version, so commit changes before publishing.
 
 Tested on TianBei N1 PRO, Intel N150, IT8613E revision 12 at `0xa30`.
 Initial readings were approximately 2,350–2,370 RPM on `fan2`; `fan3` reported 0.
@@ -116,7 +132,7 @@ bash scripts/build.sh 25.12.2-x86-64
 
 Output is in `dist/25.12.2-x86-64/`: APK, module, target lock, package metadata and
 checksums. SDK archives are checksum-verified and cached in `.work/downloads/`.
-The build rejects an unexpected SDK ABI or incompatible APK metadata.
+The build rejects an unexpected SDK ABI.
 
 ## Maintenance and provenance
 
@@ -124,7 +140,8 @@ The build rejects an unexpected SDK ABI or incompatible APK metadata.
   upstream copyright notices. Its hash is pinned in `targets/25.12.2-x86-64.json`.
 - `patches/it8613-6.12.74-fan-readonly.patch`: changes against original 6.12.74.
 - `docs/provenance.md`: source URLs, patch basis and local adaptations.
-- Bump `PKG_RELEASE` in the package Makefile whenever package contents change.
+- Versions update automatically with each source commit. `PKG_RELEASE` is an
+  internal build setting and is not appended to the APK version.
 - A new kernel or ABI needs a new target lock and validation. Never bypass the
   kernel dependency or automatically build against the latest OpenWrt branch.
 - Revisit the backport when the official driver gains IT8613 support.
