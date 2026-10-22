@@ -1,0 +1,5 @@
+/.work/
+/dist/
+*.pem
+!keys/*.pem
+__pycache__/

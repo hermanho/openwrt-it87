@@ -1,0 +1,11 @@
+{
+  "release": "25.12.2",
+  "target": "x86/64",
+  "arch": "x86_64",
+  "kernel": "6.12.74",
+  "kernel_abi": "dad96e0b324e75e311f44d061391d208",
+  "kernel_release": "1",
+  "sdk": "openwrt-sdk-25.12.2-x86-64_gcc-14.3.0_musl.Linux-x86_64.tar.zst",
+  "sdk_sha256": "4abb32a6dd05f80c24fc1a487a94b1f5f0a5d4cd560ff3dd8c1bf77793a2d5dc",
+  "source_sha256": "0041d8857cc350aa8142967250df64e1e8b08ef763d389f7efdd64a41d0937ad"
+}
