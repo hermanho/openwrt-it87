@@ -62,7 +62,11 @@ cp "$config" "$out/target.json"
 apk="$sdk/staging_dir/host/bin/apk"
 "$apk" adbdump --format json "${packages[0]}" > "$out/package.json"
 python3 "$repo/scripts/verify-package.py" "$config" "$out/package.json"
-find "$sdk/build_dir" -path '*/it87-it8613-*/it87.ko' -exec cp '{}' "$out/it87.ko" \;
+# Export the exact stripped module from the APK, not an unstripped build copy.
+extract_dir=$(mktemp -d "$work/extract.XXXXXX")
+trap 'rm -rf "$extract_dir"' EXIT
+"$apk" extract --allow-untrusted --no-chown --destination "$extract_dir" "${packages[0]}"
+cp "$extract_dir/lib/modules/$kernel/it87.ko" "$out/it87.ko"
 test -s "$out/it87.ko"
 strings "$out/it87.ko" | grep -F 'IT8613E'
 strings "$out/it87.ko" | grep -F "vermagic=$kernel SMP mod_unload"

@@ -15,7 +15,7 @@ Package: `kmod-hwmon-it87-it8613`. It conflicts with stock `kmod-hwmon-it87`,
 because both install `it87.ko`. A versioned `kmod-hwmon-it87` provide makes the
 packages mutually exclusive under APK; `CONFLICTS` also records the build-time
 conflict. GPIO and watchdog packages are separate and can remain.
-The package version starts at `6.12.74.1-r1`; `1` is the backport version.
+The package version starts at `6.12.74.1-r2`; `1` is the backport version.
 
 Tested on TianBei N1 PRO, Intel N150, IT8613E revision 12 at `0xa30`.
 Initial readings were approximately 2,350–2,370 RPM on `fan2`; `fan3` reported 0.
@@ -61,13 +61,13 @@ apk update
 apk add --simulate kmod-hwmon-it87-it8613
 ```
 
-Switch packages explicitly after reviewing the proposed install:
+Install after reviewing the proposed replacement. APK replaces the stock driver
+atomically using the versioned provide; unrelated thermal dependencies are retained:
 
 ```sh
 mkdir -p /root/it87-backup
 cp -p /lib/modules/$(uname -r)/it87.ko /root/it87-backup/it87.ko
-# Removing a package does not unload an already loaded kernel module.
-apk del kmod-hwmon-it87
+# Installation does not unload an already loaded kernel module.
 apk add kmod-hwmon-it87-it8613
 [ ! -d /sys/module/it87 ] || rmmod it87
 modprobe it87
@@ -79,7 +79,7 @@ module copying is needed. A reboot is not required. Keep the existing working
 module loaded until the replacement APK is installed successfully.
 
 An unsigned artifact can be tested locally with `apk add --allow-untrusted ./FILE.apk`
-after removing the stock package; normal feed installs use signature verification.
+and APK will replace the stock package; normal feed installs use signature verification.
 
 ### Restore the stock package
 

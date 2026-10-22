@@ -3,7 +3,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=it87-it8613
 PKG_VERSION:=1
-PKG_RELEASE:=1
+PKG_RELEASE:=2
 PKG_LICENSE:=GPL-2.0-or-later
 PKG_LICENSE_FILES:=COPYING
 PKG_BUILD_PARALLEL:=1
@@ -15,7 +15,7 @@ define KernelPackage/hwmon-it87-it8613
   SUBMENU:=Hardware Monitoring Support
   TITLE:=IT8613E fan speed monitoring (read-only)
   URL:=https://github.com/hermanho/openwrt-it87
-  DEPENDS:=@TARGET_x86_64 +kmod-hwmon-core +kmod-hwmon-vid
+  DEPENDS:=@TARGET_x86_64 +kmod-hwmon-core +kmod-hwmon-vid +kmod-i2c-core +kmod-thermal
   CONFLICTS:=kmod-hwmon-it87
   PROVIDES:=kmod-hwmon-it87
   FILES:=$(PKG_BUILD_DIR)/it87.ko
