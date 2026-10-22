@@ -12,7 +12,9 @@ No firmware image or replacement kernel is built. The package compiles an extern
 | 25.12.2 | x86/64 | 6.12.74 | dad96e0b324e75e311f44d061391d208 |
 
 Package: `kmod-hwmon-it87-it8613`. It conflicts with stock `kmod-hwmon-it87`,
-because both install `it87.ko`. GPIO and watchdog packages are separate and can remain.
+because both install `it87.ko`. A versioned `kmod-hwmon-it87` provide makes the
+packages mutually exclusive under APK; `CONFLICTS` also records the build-time
+conflict. GPIO and watchdog packages are separate and can remain.
 The package version starts at `6.12.74.1-r1`; `1` is the backport version.
 
 Tested on TianBei N1 PRO, Intel N150, IT8613E revision 12 at `0xa30`.

@@ -23,7 +23,7 @@ source_file="$repo/package/it87-it8613/src/it87.c"
 printf '%s  %s\n' "$(get source_sha256)" "$source_file" | sha256sum -c -
 archive="$downloads/$sdk_archive"
 if [[ ! -f "$archive" ]]; then
-    curl --fail --location --retry 3 --output "$archive.part" \
+    curl --fail --location --retry 3 --connect-timeout 20 --max-time 600 --output "$archive.part" \
         "https://downloads.openwrt.org/releases/$release/targets/$board/$sdk_archive"
     mv "$archive.part" "$archive"
 fi
@@ -44,9 +44,12 @@ mkdir -p "$package"
 cp -R "$repo/package/it87-it8613/." "$package/"
 (
     cd "$sdk"
-    # Preserve the prepared kernel configuration. Only select our external package.
-    sed -i '/^CONFIG_PACKAGE_kmod-hwmon-it87-it8613=/d; /^# CONFIG_PACKAGE_kmod-hwmon-it87-it8613 is not set$/d' .config
-    printf '\nCONFIG_PACKAGE_kmod-hwmon-it87-it8613=m\n' >> .config
+    # Preserve the prepared kernel configuration; change package selection only.
+    # SDK defaults can select every kmod, including the conflicting stock package.
+    for option in ALL ALL_NONSHARED ALL_KMODS PACKAGE_kmod-hwmon-it87 PACKAGE_kmod-hwmon-it87-it8613; do
+        sed -i "/^CONFIG_${option}=/d; /^# CONFIG_${option} is not set$/d" .config
+    done
+    printf '\n# CONFIG_ALL is not set\n# CONFIG_ALL_NONSHARED is not set\n# CONFIG_ALL_KMODS is not set\n# CONFIG_PACKAGE_kmod-hwmon-it87 is not set\nCONFIG_PACKAGE_kmod-hwmon-it87-it8613=m\n' >> .config
     make defconfig
     make -j"${IT87_JOBS:-2}" package/it87-it8613/compile V=s
 )
