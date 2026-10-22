@@ -39,8 +39,9 @@ The workflow follows HomeProxy's three-job layout:
 3. `deploy`: deploy the signed feed to GitHub Pages using the `github-pages` Environment.
 
 The signing key is the **same existing key as `hermanho/homeproxy`**. The committed
-`keys/openwrt-it87.pem` is identical to HomeProxy's public key. Private keys are
-never committed. GitHub secrets cannot be read back or copied between repositories
+`keys/openwrt-it87.pem` is identical to HomeProxy's public key. Both repositories rotated to this shared key on 2026-10-22. Its PEM-file SHA-256
+is `6482e69befdf634c47511007055c66b9101b47ba24d8f2fe2cd87df1d67c618e`.
+Private keys are never committed. GitHub secrets cannot be read back or copied between repositories
 through the API; import the original local key once:
 
 ```sh
