@@ -44,6 +44,7 @@ mkdir -p "$package"
 cp -R "$repo/package/it87-it8613/." "$package/"
 (
     cd "$sdk"
+    touch .config
     # Preserve the prepared kernel configuration; change package selection only.
     # SDK defaults can select every kmod, including the conflicting stock package.
     for option in ALL ALL_NONSHARED ALL_KMODS PACKAGE_kmod-hwmon-it87 PACKAGE_kmod-hwmon-it87-it8613; do
