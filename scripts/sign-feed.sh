@@ -26,3 +26,20 @@ apk mkndx --allow-untrusted --sign-key "$keydir/private.pem" --output packages.a
 apk --keys-dir "$keydir/trusted" verify "${packages[@]}" packages.adb
 apk adbdump --format json packages.adb > index.json
 sha256sum "${packages[@]}" packages.adb openwrt-it87.pem > SHA256SUMS
+cat > index.html <<'HTML'
+<!doctype html>
+<meta charset="utf-8">
+<title>IT8613 APK feed</title>
+<h1>IT8613 APK feed</h1>
+<ul>
+  <li><a href="packages.adb">packages.adb</a></li>
+HTML
+for package in "${packages[@]}"; do
+    printf '  <li><a href="%s">%s</a></li>\n' "$package" "$package" >> index.html
+done
+cat >> index.html <<'HTML'
+  <li><a href="openwrt-it87.pem">Signing public key (shared with HomeProxy)</a></li>
+  <li><a href="SHA256SUMS">SHA256SUMS</a></li>
+  <li><a href="index.json">index.json</a></li>
+</ul>
+HTML

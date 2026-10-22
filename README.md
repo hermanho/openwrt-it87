@@ -31,21 +31,33 @@ Every push to `main`, pull request, or manual run builds and verifies the APK.
 Download the APK and metadata from the run's `it87-25.12.2-x86-64-<commit>` artifact.
 PR builds have no access to the signing secret and cannot publish a feed.
 
-To enable the signed feed once, run on a trusted computer with `gh` and `openssl`:
+The workflow follows HomeProxy's three-job layout:
+
+1. `build`: compile and verify the APK and build the pinned APK signing tool.
+2. `publish`: use the `feed-production` Environment to sign APKs and the index,
+   retain previous versions in the `feed` Release, and upload the Pages artifact.
+3. `deploy`: deploy the signed feed to GitHub Pages using the `github-pages` Environment.
+
+The signing key is the **same existing key as `hermanho/homeproxy`**. The committed
+`keys/openwrt-it87.pem` is identical to HomeProxy's public key. Private keys are
+never committed. GitHub secrets cannot be read back or copied between repositories
+through the API; import the original local key once:
 
 ```sh
-bash scripts/setup-signing.sh hermanho/openwrt-it87
-git add keys/openwrt-it87.pem
-git commit -m "Add APK feed signing public key"
-git push
+bash scripts/setup-signing.sh /path/to/homeproxy-private.pem hermanho/openwrt-it87
 ```
 
-The script creates a dedicated P-256 signing key, uploads the private key as the
-repository secret `APK_SIGNING_KEY_PEM`, saves only the public key in the checkout,
-and deletes the temporary private key. Loss of the secret requires key rotation.
-The publish job signs and verifies every APK and `packages.adb`, retains previous
-APK versions, and publishes the stable `feed` Release. Signing is skipped when the
-secret or public key is absent; the unsigned build artifact remains available.
+The script verifies the private key against the committed public key before setting
+`APK_SIGNING_KEY_PEM` in the `feed-production` Environment. It never creates a new
+key. Publishing fails if the secret is missing or the public key does not match.
+Enable GitHub Pages with **GitHub Actions** as the source. The feed URL is:
+
+```text
+https://hermanho.github.io/openwrt-it87/packages.adb
+```
+
+The GitHub Release feed remains available as a fallback:
+`https://github.com/hermanho/openwrt-it87/releases/download/feed/packages.adb`.
 
 ## Install the signed feed
 
@@ -53,9 +65,9 @@ Run these commands on the router. First confirm `apk info -v kernel` matches the
 supported target above; the APK also enforces this dependency.
 
 ```sh
-curl -fL https://raw.githubusercontent.com/hermanho/openwrt-it87/main/keys/openwrt-it87.pem \
+curl -fL https://hermanho.github.io/openwrt-it87/openwrt-it87.pem \
   -o /etc/apk/keys/openwrt-it87.pem
-echo 'https://github.com/hermanho/openwrt-it87/releases/download/feed/packages.adb' \
+echo 'https://hermanho.github.io/openwrt-it87/packages.adb' \
   > /etc/apk/repositories.d/it87.list
 apk update
 apk add --simulate kmod-hwmon-it87-it8613
